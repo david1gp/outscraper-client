@@ -1,0 +1,134 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "version": "fixture-1",
+    "title": "Small generator fixture"
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      }
+    },
+    "schemas": {
+      "PetId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "Pet": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "PetCreate": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "PetId": {
+        "name": "petId",
+        "in": "path",
+        "required": true,
+        "description": "Pet identifier",
+        "schema": {
+          "$ref": "#/components/schemas/PetId"
+        }
+      }
+    },
+    "requestBodies": {
+      "PetCreate": {
+        "description": "A new pet",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PetCreate"
+            },
+            "example": {
+              "name": "Milo"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Pet": {
+        "description": "A pet",
+        "headers": {
+          "X-Request-Id": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Pet"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/pets/{petId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/PetId"
+        }
+      ],
+      "get": {
+        "summary": "Get one pet",
+        "operationId": "petGet",
+        "parameters": [
+          {
+            "name": "includeOwner",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Pet"
+          }
+        }
+      }
+    },
+    "/pets": {
+      "post": {
+        "operationId": "petCreate",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/PetCreate"
+        },
+        "security": [],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "default": {
+            "description": "Unexpected error"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "operations": [
+    {
+      "folder": "pet-create",
+      "method": "POST",
+      "operationId": "petCreate",
+      "parameters": [],
+      "path": "/pets",
+      "requestBody": {
+        "content": [
+          {
+            "example": {
+              "name": "Milo"
+            },
+            "mediaType": "application/json",
+            "schema": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": ["name"],
+              "type": "object"
+            }
+          }
+        ],
+        "description": "A new pet",
+        "required": true
+      },
+      "responses": [
+        {
+          "content": [],
+          "description": "Created",
+          "status": "201"
+        },
+        {
+          "content": [],
+          "description": "Unexpected error",
+          "status": "default"
+        }
+      ],
+      "security": []
+    },
+    {
+      "folder": "pet-get",
+      "method": "GET",
+      "operationId": "petGet",
+      "parameters": [
+        {
+          "description": "Pet identifier",
+          "in": "path",
+          "location": "path",
+          "name": "petId",
+          "required": true,
+          "schema": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        {
+          "in": "query",
+          "location": "query",
+          "name": "includeOwner",
+          "required": false,
+          "schema": {
+            "type": "boolean"
+          }
+        }
+      ],
+      "path": "/pets/{petId}",
+      "responses": [
+        {
+          "content": [
+            {
+              "mediaType": "application/json",
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          ],
+          "description": "A pet",
+          "headers": {
+            "X-Request-Id": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "status": "200"
+        }
+      ],
+      "security": [
+        {
+          "ApiKeyAuth": []
+        }
+      ],
+      "summary": "Get one pet"
+    }
+  ],
+  "source": {
+    "openapi": "3.1.0",
+    "security": [
+      {
+        "ApiKeyAuth": []
+      }
+    ],
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "in": "header",
+        "name": "X-API-KEY",
+        "type": "apiKey"
+      }
+    },
+    "title": "Small generator fixture",
+    "version": "fixture-1"
+  },
+  "version": 1
+}
