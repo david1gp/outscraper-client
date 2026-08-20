@@ -27,15 +27,23 @@
   "private": false,
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "outscraper-client": "./dist/cli.js"
+  },
   "scripts": {
     "dev": "bun test --watch",
     "test": "bun test",
+    "test:task1": "bun test test/openApiGeneration.test.ts",
     "test:w": "bun test --watch",
-    "build": "rm -rf ./dist && bun tsc -p ./tsconfig.lib.json",
+    "build": "rm -rf ./dist && bun tsc -p ./tsconfig.lib.json && chmod +x ./dist/cli.js",
     "check": "bun tsc --noEmit",
+    "cli": "bun src/cli.ts",
+    "openapi:snapshot": "bun scripts/openapi-snapshot.ts",
+    "openapi:normalize": "bun scripts/openapi-normalize.ts",
+    "generate": "bun scripts/openapi-generate.ts && biome format --write src",
     "release": "bash ./ops/release.sh",
     "update": "bun update",
-    "format": "biome format --write src test package.json tsconfig.json tsconfig.lib.json biome.json",
+    "format": "biome format --write src scripts test package.json tsconfig.json tsconfig.lib.json biome.json",
     "clean": "rm -rf ./dist",
     "reset": "rm -rf ./node_modules"
   },
@@ -70,5 +78,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "@stricli/core": "^1.2.5"
+  }
 }
