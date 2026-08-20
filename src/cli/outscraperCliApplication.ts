@@ -1,5 +1,6 @@
 import { buildApplication, help, version } from "@stricli/core"
 import { outscraperGeneratedCliCommands } from "../outscraperGeneratedCliCommands.js"
+import { packageVersion } from "../packageVersion.js"
 
 export const outscraperCliApplication = buildApplication(
   outscraperGeneratedCliCommands,
@@ -25,7 +26,7 @@ export const outscraperCliApplication = buildApplication(
     version: version({
       brief: "Print version information and exit",
       info: {
-        currentVersion: "0.1.0",
+        currentVersion: packageVersion,
       },
     }),
   },
