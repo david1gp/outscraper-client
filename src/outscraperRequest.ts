@@ -1,8 +1,16 @@
-import { createResult, createResultError, type Result } from "#result"
 import * as v from "valibot"
+import { type Result } from "#result"
+import { outscraperBodySerialize } from "./outscraperBodySerialize.js"
 import type { OutscraperClient } from "./outscraperClientCreate.js"
+import type { OutscraperHeaderValue } from "./outscraperHeaderValue.js"
+import { outscraperHttpErrorCreate } from "./outscraperHttpErrorCreate.js"
+import type { OutscraperQueryParamValue } from "./outscraperQueryParamValue.js"
+import { outscraperResponseJsonParse } from "./outscraperResponseJsonParse.js"
+import { outscraperResponseValidate } from "./outscraperResponseValidate.js"
+import { outscraperResultErrorCreate } from "./outscraperResultErrorCreate.js"
+import { outscraperUrlCreate } from "./outscraperUrlCreate.js"
 
-export type QueryParamValue = string | number | boolean | readonly (string | number | boolean)[] | null | undefined
+export type { OutscraperQueryParamValue as QueryParamValue } from "./outscraperQueryParamValue.js"
 
 export async function outscraperRequest<TSchema extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>>(
   client: OutscraperClient,
@@ -10,32 +18,21 @@ export async function outscraperRequest<TSchema extends v.BaseSchema<unknown, un
     op: string
     path: string
     method?: string
-    params?: Record<string, QueryParamValue>
+    pathParams?: Record<string, string | number | boolean>
+    params?: Record<string, OutscraperQueryParamValue>
+    headers?: Record<string, OutscraperHeaderValue>
     body?: unknown
+    contentType?: string
     schema: TSchema
     baseUrl?: string
   },
 ): Promise<Result<v.InferOutput<TSchema>>> {
-  const { op, path, method = "GET", params, body, schema } = options
+  const { op, path, method = "GET", pathParams, params, headers: parameterHeaders, body, contentType, schema } = options
   const baseUrl = options.baseUrl ?? client.config.baseUrl
 
-  const url = new URL(`${baseUrl}${path.startsWith("/") ? path : `/${path}`}`)
-
-  if (params) {
-    for (const [key, val] of Object.entries(params)) {
-      if (val === undefined || val === null || val === "") {
-        continue
-      }
-      if (Array.isArray(val)) {
-        for (const item of val) {
-          if (item !== undefined && item !== null && item !== "") {
-            url.searchParams.append(key, String(item))
-          }
-        }
-      } else {
-        url.searchParams.set(key, String(val))
-      }
-    }
+  const urlResult = outscraperUrlCreate(op, baseUrl, path, pathParams, params)
+  if (!urlResult.success) {
+    return urlResult
   }
 
   const headers: Record<string, string> = {
@@ -44,52 +41,61 @@ export async function outscraperRequest<TSchema extends v.BaseSchema<unknown, un
     Accept: "application/json",
   }
 
+  for (const [name, value] of Object.entries(parameterHeaders ?? {})) {
+    if (value === undefined) continue
+    headers[name] = Array.isArray(value) ? value.join(",") : String(value)
+  }
+
   if (body !== undefined) {
-    headers["Content-Type"] = "application/json"
+    headers["Content-Type"] = contentType ?? "application/json"
+  }
+
+  const bodyResult =
+    body === undefined ? { success: true as const, data: undefined } : outscraperBodySerialize(op, body)
+  if (!bodyResult.success) {
+    return bodyResult
   }
 
   const fetchFn = client.config.fetch ?? fetch
 
   let response: Response
   try {
-    response = await fetchFn(url.toString(), {
+    response = await fetchFn(urlResult.data.toString(), {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: bodyResult.data,
     })
   } catch (err) {
-    return createResultError(op, err instanceof Error ? err.message : String(err))
+    return outscraperResultErrorCreate(op, `Fetch failed: ${err instanceof Error ? err.message : String(err)}`, {
+      apiKey: client.config.apiKey,
+    })
   }
 
   if (!response.ok) {
-    let errorText = ""
-    try {
-      errorText = await response.text()
-    } catch {
-      errorText = response.statusText
-    }
-    return createResultError(op, `Request failed with status ${response.status}: ${errorText}`)
+    return outscraperHttpErrorCreate(op, response, client.config.apiKey)
   }
 
   if (response.status === 204) {
-    const parsed = v.safeParse(schema, undefined)
-    if (!parsed.success) {
-      return createResultError(op, `Failed to parse empty response: ${v.summarize(parsed.issues)}`)
-    }
-    return createResult(parsed.output)
+    return outscraperResponseValidate(op, undefined, schema, client.config.apiKey)
   }
 
-  let json: unknown
+  let responseText: string
   try {
-    json = await response.json()
+    responseText = await response.text()
   } catch (err) {
-    return createResultError(op, `Invalid JSON response: ${err instanceof Error ? err.message : String(err)}`)
+    return outscraperResultErrorCreate(
+      op,
+      `Response body read failed: ${err instanceof Error ? err.message : String(err)}`,
+      {
+        apiKey: client.config.apiKey,
+      },
+    )
   }
 
-  const parsed = v.safeParse(schema, json)
-  if (!parsed.success) {
-    return createResultError(op, `Schema validation failed: ${v.summarize(parsed.issues)}`)
+  const jsonResult = outscraperResponseJsonParse(op, responseText, client.config.apiKey)
+  if (!jsonResult.success) {
+    return jsonResult
   }
 
-  return createResult(parsed.output)
+  return outscraperResponseValidate(op, jsonResult.data, schema, client.config.apiKey)
 }

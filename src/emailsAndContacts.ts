@@ -1,8 +1,9 @@
-import type { Result } from "#result"
 import * as v from "valibot"
+import { type Result } from "#result"
 import { type OutscraperAsyncResponse, outscraperAsyncResponseSchema } from "./outscraperAsyncResponseSchema.js"
 import type { OutscraperClient } from "./outscraperClientCreate.js"
 import { outscraperRequest } from "./outscraperRequest.js"
+import { outscraperResultErrorCreate } from "./outscraperResultErrorCreate.js"
 
 export const emailsAndContactsOptionsSchema = v.object({
   query: v.union([v.string(), v.array(v.string())]),
@@ -26,11 +27,7 @@ export async function emailsAndContacts(
   const op = "emailsAndContacts"
   const parsed = v.safeParse(emailsAndContactsOptionsSchema, options)
   if (!parsed.success) {
-    return {
-      success: false,
-      op,
-      errorMessage: `Invalid emailsAndContacts options: ${v.summarize(parsed.issues)}`,
-    }
+    return outscraperResultErrorCreate(op, `Invalid emailsAndContacts options: ${v.summarize(parsed.issues)}`)
   }
 
   const opt = parsed.output

@@ -1,8 +1,9 @@
-import type { Result } from "#result"
 import * as v from "valibot"
+import { type Result } from "#result"
 import { type OutscraperAsyncResponse, outscraperAsyncResponseSchema } from "./outscraperAsyncResponseSchema.js"
 import type { OutscraperClient } from "./outscraperClientCreate.js"
 import { outscraperRequest } from "./outscraperRequest.js"
+import { outscraperResultErrorCreate } from "./outscraperResultErrorCreate.js"
 
 export const businessesSearchOptionsSchema = v.object({
   filters: v.optional(v.record(v.string(), v.unknown()), {}),
@@ -34,11 +35,7 @@ export async function businessesSearch(
   const op = "businessesSearch"
   const parsed = v.safeParse(businessesSearchOptionsSchema, options)
   if (!parsed.success) {
-    return {
-      success: false,
-      op,
-      errorMessage: `Invalid businessesSearch options: ${v.summarize(parsed.issues)}`,
-    }
+    return outscraperResultErrorCreate(op, `Invalid businessesSearch options: ${v.summarize(parsed.issues)}`)
   }
 
   const opt = parsed.output

@@ -1,8 +1,9 @@
-import type { Result } from "#result"
 import * as v from "valibot"
+import { type Result } from "#result"
 import { type OutscraperAsyncResponse, outscraperAsyncResponseSchema } from "./outscraperAsyncResponseSchema.js"
 import type { OutscraperClient } from "./outscraperClientCreate.js"
 import { outscraperRequest } from "./outscraperRequest.js"
+import { outscraperResultErrorCreate } from "./outscraperResultErrorCreate.js"
 
 export const googleMapsReviewsOptionsSchema = v.object({
   query: v.union([v.string(), v.array(v.string())]),
@@ -38,11 +39,7 @@ export async function googleMapsReviews(
   const op = "googleMapsReviews"
   const parsed = v.safeParse(googleMapsReviewsOptionsSchema, options)
   if (!parsed.success) {
-    return {
-      success: false,
-      op,
-      errorMessage: `Invalid googleMapsReviews options: ${v.summarize(parsed.issues)}`,
-    }
+    return outscraperResultErrorCreate(op, `Invalid googleMapsReviews options: ${v.summarize(parsed.issues)}`)
   }
 
   const opt = parsed.output

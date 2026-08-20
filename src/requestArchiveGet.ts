@@ -1,8 +1,8 @@
-import type { Result } from "#result"
 import * as v from "valibot"
-import { type OutscraperAsyncResponse, outscraperAsyncResponseSchema } from "./outscraperAsyncResponseSchema.js"
+import { type Result } from "#result"
 import type { OutscraperClient } from "./outscraperClientCreate.js"
 import { outscraperRequest } from "./outscraperRequest.js"
+import { outscraperResultErrorCreate } from "./outscraperResultErrorCreate.js"
 
 export const requestArchiveResponseSchema = v.object({
   id: v.string(),
@@ -19,16 +19,13 @@ export async function requestArchiveGet(
 ): Promise<Result<RequestArchiveResponse>> {
   const op = "requestArchiveGet"
   if (!requestId || requestId.trim() === "") {
-    return {
-      success: false,
-      op,
-      errorMessage: "requestId is required",
-    }
+    return outscraperResultErrorCreate(op, "requestId is required")
   }
 
   return outscraperRequest(client, {
     op,
-    path: `/requests/${encodeURIComponent(requestId)}`,
+    path: "/requests/{requestId}",
+    pathParams: { requestId },
     schema: requestArchiveResponseSchema,
   })
 }
