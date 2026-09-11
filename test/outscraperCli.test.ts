@@ -40,6 +40,34 @@ describe("Outscraper CLI", () => {
     expect(routeCommandCount()).toBe(107)
   })
 
+  it("preserves plain version output and reports verbose metadata without credentials", async () => {
+    const plain = await cliRun(["--version"], {
+      OUTSCRAPER_API_KEY: "version-secret",
+      OUTSCRAPER_BASE_URL: "http://127.0.0.1:1",
+    })
+    const verbose = await cliRun(["version", "--verbose"], {
+      OUTSCRAPER_API_KEY: "version-secret",
+      OUTSCRAPER_BASE_URL: "http://127.0.0.1:1",
+    })
+
+    expect(plain).toEqual({ status: 0, stdout: "0.1.0\n", stderr: "" })
+    expect(verbose.status).toBe(0)
+    expect(verbose.stderr).toBe("")
+    expect(verbose.stdout).toMatch(/^0\.1\.0\n/)
+    expect(verbose.stdout).toContain("user agent: @adaptive-ds/outscraper-client/0.1.0")
+    expect(verbose.stdout).toContain("description: TypeScript Result-based API client for Outscraper")
+    expect(verbose.stdout).toContain("author: unavailable")
+    expect(verbose.stdout).toContain("license: MIT")
+    expect(verbose.stdout).toContain("project: https://github.com/david1gp/outscraper-client")
+    expect(verbose.stdout).toContain("installation type: development checkout")
+    expect(verbose.stdout).toMatch(/runtime: bun \S+\n/)
+    expect(verbose.stdout).toContain("runtime requirements: unavailable")
+    expect(verbose.stdout).toMatch(new RegExp(`platform: ${process.platform} ${process.arch} \\(OS release .+\\)\\n`))
+    expect(verbose.stdout).toMatch(/executable: .+\nexecutable target: .+\n/)
+    expect(verbose.stdout).not.toContain("build details:")
+    expect(verbose.stdout).not.toContain("version-secret")
+  })
+
   it("parses typed GET arguments and keeps API keys out of output", async () => {
     const requests: Array<{ url: string; apiKey: string | null }> = []
     const server = Bun.serve({
