@@ -126,7 +126,7 @@ bun run openapi:snapshot       # fetch the official OpenAPI document
 bun run openapi:normalize      # normalize the checked-in snapshot
 bun run generate               # regenerate src endpoint files and exports
 bun run cli -- --help          # run the CLI from source
-bun run check                  # TypeScript check
+bun check                      # TypeScript check
 bun run test                   # Bun unit/integration tests
 bun run build                  # emit dist and the executable CLI
 bun run dev                    # test watch mode
