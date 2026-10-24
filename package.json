@@ -43,6 +43,9 @@
     "release": "bash ./ops/release.sh",
     "update": "bun update",
     "format": "biome format --write src scripts test package.json tsconfig.json tsconfig.lib.json biome.json",
+    "format:check": "biome format src scripts test package.json tsconfig.json tsconfig.lib.json biome.json",
+    "type-check": "bun --check",
+    "check": "bun run format:check && bun run type-check && bun run test",
     "clean": "rm -rf ./dist",
     "reset": "rm -rf ./node_modules"
   },
